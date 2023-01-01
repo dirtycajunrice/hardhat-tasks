@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { task, subtask, types } from 'hardhat/config';
-import { loadContractData, getProxyData } from './helpers';
+import { loadContractData, getProxyData } from '../helpers';
 
 task("saveContractDetails", "Save the details of a contract to local storage")
   .addParam("name", "Contract name", null, types.string)

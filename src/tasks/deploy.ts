@@ -3,7 +3,7 @@ import '@openzeppelin/hardhat-upgrades';
 import { ContractFactory } from 'ethers';
 import { subtask, task, types } from 'hardhat/config';
 import { Manifest } from '@openzeppelin/upgrades-core';
-import { ContractType, validateContractType, waitSeconds } from './helpers';
+import { ContractType, validateContractType, waitSeconds } from '../helpers';
 
 task("deploy", "Deploy a contract")
   .addParam("name")
@@ -42,10 +42,8 @@ subtask("deploy:static", "Deploy a static contract")
 subtask("deploy:upgradeable", "Deploy a transparent proxy contract")
   .addParam("name")
   .setAction(async ({ name, type }, hre) => {
-
-
     const contractFactory = await hre.ethers.getContractFactory(name) as ContractFactory
-    console.log("Deploying", name, "as a transparent upgradeable contract")
+    console.log("Deploying", name, "as an upgradeable contract")
     const contract = await hre.upgrades.deployProxy(contractFactory as any, { kind: type })
     const manifest = await Manifest.forNetwork(hre.network.provider);
     const proxy = await manifest.getProxyFromAddress(contract.address);

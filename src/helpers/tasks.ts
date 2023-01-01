@@ -50,7 +50,7 @@ export const getContractData = (name: string, hre: HardhatRuntimeEnvironment): {
   if (!(chainId.toString() in contractData)) {
     throw `No contracts found for chainId ${chainId}`;
   }
-  const data = Object.entries(contractData[chainId.toString()]).find(([address, data]) => data.name === name)
+  const data = Object.entries(contractData[chainId.toString()]).find(([, data]) => data.name === name)
   if (!data) {
     throw `No contract address found for ${name}`;
   }

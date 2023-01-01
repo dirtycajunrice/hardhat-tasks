@@ -1,7 +1,7 @@
 import "@nomiclabs/hardhat-ethers";
 import '@openzeppelin/hardhat-upgrades';
 import { task, types } from 'hardhat/config';
-import { getContractAndData, waitSeconds } from './helpers';
+import { getContractAndData, waitSeconds } from '../helpers';
 
 task("upgrade", "Upgrade a proxy contract")
   .addParam("name")

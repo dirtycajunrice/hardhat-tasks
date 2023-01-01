@@ -1,7 +1,7 @@
 import "@nomiclabs/hardhat-ethers";
 import '@openzeppelin/hardhat-upgrades';
 import { task } from 'hardhat/config';
-import { getContract, getProxyData } from './helpers';
+import { getContract, getProxyData } from '../helpers';
 
 
 task("token-uri", "Fetches the token metadata for the given token ID")

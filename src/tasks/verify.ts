@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config';
-import { getContractAndData } from './helpers';
+import { getContractAndData } from '../helpers';
 
 task("verify", "Verify a contract's source code")
   .addOptionalParam("name", "Contract name")
