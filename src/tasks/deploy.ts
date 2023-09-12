@@ -1,58 +1,58 @@
-import "@nomiclabs/hardhat-ethers";
-import '@openzeppelin/hardhat-upgrades';
-import { ContractFactory } from 'ethers';
 import { subtask, task, types } from 'hardhat/config';
 import { Manifest } from '@openzeppelin/upgrades-core';
-import { ContractType, validateContractType, waitSeconds } from '../helpers';
+import { validateContractType, waitSeconds } from '../internal/helpers';
 
 task("deploy", "Deploy a contract")
   .addParam("name")
-  .addOptionalParam("type", "Contract deployment type - static | transparent | uups", "transparent", types.string)
-  .setAction(async ({ name, type }, hre) => {
+  .addFlag("forceGasLimit", "Force gas limit")
+  .addOptionalParam("type", "Contract deployment type - static | transparent | uups", "uups", types.string)
+  .setAction(async ({ name, type, forceGasLimit }, hre) => {
     validateContractType(type);
     await hre.run('compile')
-    if ((type as ContractType) === 'static') {
-      await hre.run(`deploy:static`, { name });
+    if (type === 'static') {
+      await hre.run(`deploy:static`, { name, forceGasLimit });
     } else {
-      await hre.run(`deploy:upgradeable`, { name });
+      await hre.run(`deploy:upgradeable`, { name, forceGasLimit });
     }
   });
 
 subtask("deploy:static", "Deploy a static contract")
   .addParam("name")
+  .addFlag("forceGasLimit", "Force gas limit")
   .setAction(async ({ name }, hre) => {
     await hre.run('compile')
-    // @ts-ignore
-    const contractFactory: ContractFactory = await hre.ethers.getContractFactory(name)
+    const factory = await hre.ethers.getContractFactory(name)
     console.log("Deploying", name, "as a static contract")
-    const contract = await contractFactory.deploy()
-    await contract.deployed()
+    const contract = await factory.deploy()
+    await contract.waitForDeployment();
+    const address = await contract.getAddress();
     console.log(name, "deployed!")
     await hre.run('saveContractDetails:subtask', {
       name,
-      address: contract.address,
+      address,
       chainId: hre.network.config.chainId,
       type: 'static'
     })
     await waitSeconds(5);
     console.log("Verifying contract...")
-    await hre.run("verify", { address: contract.address })
+    await hre.run("verify", { address })
   });
 
 subtask("deploy:upgradeable", "Deploy a transparent proxy contract")
   .addParam("name")
   .setAction(async ({ name, type }, hre) => {
-    const contractFactory = await hre.ethers.getContractFactory(name) as ContractFactory
+    const factory = await hre.ethers.getContractFactory(name)
     console.log("Deploying", name, "as an upgradeable contract")
-    const contract = await hre.upgrades.deployProxy(contractFactory as any, { kind: type })
+    const contract = await hre.upgrades.deployProxy(factory, { kind: type })
+    const address = await contract.getAddress();
     const manifest = await Manifest.forNetwork(hre.network.provider);
-    const proxy = await manifest.getProxyFromAddress(contract.address);
+    const proxy = await manifest.getProxyFromAddress(address);
 
     await contract.deployed();
     console.log(name, "deployed!")
     await hre.run('saveContractDetails:subtask', {
       name,
-      address: contract.address,
+      address,
       chainId: hre.network.config.chainId,
       type: proxy.kind
     })

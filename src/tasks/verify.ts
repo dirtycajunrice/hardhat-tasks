@@ -1,15 +1,13 @@
 import { task } from 'hardhat/config';
-import { getContractAndData } from '../helpers';
 
 task("verify", "Verify a contract's source code")
   .addOptionalParam("name", "Contract name")
-  .setAction(async ({ name, address }, hre) => {
-    let resolvedAddress = address;
+  .setAction(async ({ name, address: inAddress }, hre) => {
+    let address = inAddress;
     if (!address) {
-      const { contract } = await getContractAndData(name, hre);
-      resolvedAddress = contract.address;
+      const { contract } = await hre.dcr.getContractAndData(name);
+      address = await contract.getAddress();
     }
     console.log("Verifying contract...")
-    await hre.run("verify:verify", { address: resolvedAddress })
+    await hre.run("verify:verify", { address })
   });
-
