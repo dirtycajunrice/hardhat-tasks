@@ -6,9 +6,7 @@ rm -rf dist
 
 mkdir dist
 
-git stash >> /dev/null
 npm version minor
-git stash pop >> /dev/null
 
 cp package.json README.md LICENSE dist/
 
