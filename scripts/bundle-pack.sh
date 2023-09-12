@@ -10,8 +10,9 @@ git stash >> /dev/null
 npm version minor
 git stash pop >> /dev/null
 
-tsc
 cp package.json README.md LICENSE dist/
+
+tsc
 
 jq 'del(.devDependencies, .scripts)' < package.json > dist/package.json
 
