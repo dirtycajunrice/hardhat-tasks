@@ -1,6 +1,6 @@
 {
   "name": "@dirtycajunrice/hardhat-tasks",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "description": "Hardhat helper tasks and functions",
   "author": "dirtycajunrice",
   "license": "GPL-V3",
