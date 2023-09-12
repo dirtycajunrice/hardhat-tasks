@@ -12,7 +12,7 @@ git stash pop >> /dev/null
 
 cp package.json README.md LICENSE dist/
 
-tsc
+npx tsc
 
 jq 'del(.devDependencies, .scripts)' < package.json > dist/package.json
 
