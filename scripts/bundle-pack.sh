@@ -6,8 +6,6 @@ rm -rf dist
 
 mkdir dist
 
-npm version minor
-
 cp package.json README.md LICENSE dist/
 
 npx tsc
