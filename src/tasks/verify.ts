@@ -2,12 +2,18 @@ import { task } from 'hardhat/config';
 
 task("verify", "Verify a contract's source code")
   .addOptionalParam("name", "Contract name")
-  .setAction(async ({ name, address: inAddress }, hre) => {
-    let address = inAddress;
-    if (!address) {
-      const { contract } = await hre.dcr.getContractAndData(name);
-      address = await contract.getAddress();
+  .addFlag("tenderly", "Verify on Tenderly")
+  .setAction(async ({ name, tenderly }, hre) => {
+    const { contract, data } = await hre.dcr.getContractAndData(name);
+    const address = await contract.getAddress();
+
+    console.log("Verifying contracts:");
+    console.log("Proxy:", address);
+    console.log("Impl:", data.impl);
+
+    if (tenderly && 'tenderly' in hre) {
+      await (hre.tenderly as any).verify({ name, address: data.impl! }, { name: "ERC1967Proxy", address });
+    } else {
+      await hre.run("verify:verify", { address })
     }
-    console.log("Verifying contract...")
-    await hre.run("verify:verify", { address })
   });
