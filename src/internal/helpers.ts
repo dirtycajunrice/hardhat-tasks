@@ -5,6 +5,7 @@ import fs from "node:fs";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { setTimeout } from "timers/promises";
 import { ContractDetails, ContractsData, ContractType } from "./types";
+import path from "path";
 
 export const isTypeOfContractType = (key: string): key is ContractType => {
   return ['static', 'transparent', 'uups'].includes(key)
@@ -17,14 +18,26 @@ export const validateContractType = (key: string) => {
 }
 
 export const loadContractData = (): ContractsData => {
+  const dataDir = ".hardhat-tasks";
   const fileName = 'contracts.json';
-  if (!fs.existsSync(fileName)) {
-    console.log("Creating file");
-    fs.writeFileSync(fileName, JSON.stringify({}), 'utf-8')
-    return {};
+  if (!fs.existsSync(dataDir)) {
+    console.log("Creating hardhat-tasks data directory");
+    fs.mkdirSync(dataDir);
   }
-  const data = fs.readFileSync(fileName, 'utf-8');
-  return JSON.parse(data);
+  let data = {};
+  if (!fs.existsSync(path.join(dataDir, fileName))) {
+    console.log("Creating hardhat-tasks contracts file");
+    fs.writeFileSync(path.join(dataDir, fileName), JSON.stringify({}), 'utf-8');
+  } else {
+    data = JSON.parse(fs.readFileSync(path.join(dataDir, fileName), 'utf-8') || "{}");
+  }
+  if (fs.existsSync(fileName)) {
+    console.log("Migrating legacy contracts file");
+    data = { ...data, ...JSON.parse(fs.readFileSync(fileName, 'utf-8') || "{}") };
+    fs.writeFileSync(path.join(dataDir, fileName), JSON.stringify(data), 'utf-8');
+    fs.rmSync(fileName, { force: true });
+  }
+  return data;
 }
 
 export const getContractData = (hre: HardhatRuntimeEnvironment, name: string): ContractDetails => {
