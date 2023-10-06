@@ -1,20 +1,16 @@
-import fs from 'fs';
-import { task, subtask, types } from 'hardhat/config';
+import { task, types } from 'hardhat/config';
+import { storeContractData } from "../internal/helpers";
 
 task("saveContractDetails", "Save the details of a contract to local storage")
   .addParam("name", "Contract name", null, types.string)
   .addParam("address", "Contract address", null, types.string)
   .setAction(async ({ name, address }, hre) => {
-    await hre.run('saveContractDetails:subtask', { name, address })
-  });
-
-subtask("saveContractDetails:subtask", "Save details of a contract to local storage")
-  .addParam("name", "Contract name", null, types.string)
-  .addParam("address", "Contract address", null, types.string)
-  .setAction(async ({ name, address }, hre) => {
-
     const chainId = hre.network.config.chainId || 0;
-    if (!(chainId in hre.dcr.contractsData) && !(chainId.toString() in hre.dcr.contractsData)) {
+    if (!(
+      chainId in hre.dcr.contractsData
+    ) && !(
+      chainId.toString() in hre.dcr.contractsData
+    )) {
       hre.dcr.contractsData[chainId] = {};
     }
     const { type, impl, admin } = await hre.dcr.getProxyData(address);
@@ -30,6 +26,5 @@ subtask("saveContractDetails:subtask", "Save details of a contract to local stor
     if (type === 'transparent') {
       console.log('Admin:', admin);
     }
-    const data = JSON.stringify(hre.dcr.contractsData, null, 2);
-    fs.writeFileSync('contracts.json', data, 'utf-8')
+    storeContractData(hre.dcr.contractsData);
   });

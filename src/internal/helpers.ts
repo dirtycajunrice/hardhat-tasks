@@ -7,6 +7,10 @@ import { setTimeout } from "timers/promises";
 import { ContractDetails, ContractsData, ContractType } from "./types";
 import path from "path";
 
+const dataDir = ".hardhat-tasks";
+const fileName = 'contracts.json';
+const dataPath = path.join(dataDir, fileName);
+
 export const isTypeOfContractType = (key: string): key is ContractType => {
   return ['static', 'transparent', 'uups'].includes(key)
 }
@@ -17,27 +21,36 @@ export const validateContractType = (key: string) => {
   }
 }
 
-export const loadContractData = (): ContractsData => {
-  const dataDir = ".hardhat-tasks";
-  const fileName = 'contracts.json';
+const createDataFileIfNeeded = () => {
   if (!fs.existsSync(dataDir)) {
     console.log("Creating hardhat-tasks data directory");
     fs.mkdirSync(dataDir);
   }
-  let data = {};
-  if (!fs.existsSync(path.join(dataDir, fileName))) {
+  if (!fs.existsSync(dataPath)) {
     console.log("Creating hardhat-tasks contracts file");
-    fs.writeFileSync(path.join(dataDir, fileName), JSON.stringify({}), 'utf-8');
-  } else {
-    data = JSON.parse(fs.readFileSync(path.join(dataDir, fileName), 'utf-8') || "{}");
+    fs.writeFileSync(dataPath, JSON.stringify({}), 'utf-8');
   }
+
   if (fs.existsSync(fileName)) {
     console.log("Migrating legacy contracts file");
-    data = { ...data, ...JSON.parse(fs.readFileSync(fileName, 'utf-8') || "{}") };
-    fs.writeFileSync(path.join(dataDir, fileName), JSON.stringify(data), 'utf-8');
+    const data = {
+      ...JSON.parse(fs.readFileSync(dataPath, 'utf-8') || "{}"),
+      ...JSON.parse(fs.readFileSync(fileName, 'utf-8') || "{}")
+    };
+    fs.writeFileSync(dataPath, JSON.stringify(data, null, 2), 'utf-8');
     fs.rmSync(fileName, { force: true });
   }
-  return data;
+}
+
+
+export const storeContractData = (contractsData: ContractsData = {}) => {
+  createDataFileIfNeeded();
+  fs.writeFileSync(dataPath, JSON.stringify(contractsData, null, 2), 'utf-8');
+}
+
+export const loadContractData = (): ContractsData => {
+  createDataFileIfNeeded();
+  return JSON.parse(fs.readFileSync(dataPath, 'utf-8') || "{}");
 }
 
 export const getContractData = (hre: HardhatRuntimeEnvironment, name: string): ContractDetails => {
@@ -49,6 +62,7 @@ export const getContractData = (hre: HardhatRuntimeEnvironment, name: string): C
   if (!(chainId.toString() in hre.dcr.contractsData)) {
     throw `No contracts found for chainId ${chainId}`;
   }
+
   const data = Object.entries(hre.dcr.contractsData[chainId.toString()]).find(([, data]) => data.name === name);
   if (!data) {
     throw `No contract address found for ${name}`;
